@@ -50,6 +50,6 @@ jobs:
         script: |
           docker stop connections
           docker rm --force connections
-          docker run  -d -p 8080:8080 --network=rede --name connections eumiguel/connections-ci:${{ github.sha }}
+          docker run  -d -p 8080:8080 -e MONGO_URL=${{ secrets.MONGO_URL}} --network=rede --name connections eumiguel/connections-ci:${{ github.sha }}
 
 
