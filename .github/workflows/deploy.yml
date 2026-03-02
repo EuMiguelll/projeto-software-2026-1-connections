@@ -39,4 +39,17 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: eumiguel/connections-ci:${{ github.sha }}
+        
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST_TEST }}
+        username: "ubuntu"
+        key: ${{ secrets.KEY_TEST }}
+        port: 22
+        script: |
+          docker stop connections
+          docker rm --force connections
+          docker run  -d -p 8080:8080 --network=rede --name connections eumiguel/connections-ci:${{ github.sha }}
+
 
