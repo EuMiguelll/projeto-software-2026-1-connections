@@ -17,6 +17,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -98,8 +99,36 @@ class ConnectionControllerIntegrationTest {
         assertThat(repository.findAll()).hasSize(2);
     }
 
-    //listConnections_shouldReturnConnectionsForUser
-    //deleteConnection_shouldRemoveConnection
-    //createConnection_shouldReturn404WhenUserDoesNotExist
+    @Test
+    void deleteConnection_shouldRemoveConnection() throws Exception {
+        Connection connection = new Connection("user1", "user2");
+        repository.save(connection);
+        assertThat(repository.findAll()).hasSize(1);
+
+        var request = new DeleteConnectionRequest("user1", "user2");
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(delete("/connections")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        assertThat(repository.findAll()).hasSize(0);
+    }
+
+    @Test
+    void createConnection_shouldReturn404WhenUserDoesNotExist() throws Exception {
+        when(userClient.userExists("user1")).thenReturn(false);
+
+        var request = new CreateConnectionRequest("user1", "user2");
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(post("/connections")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        assertThat(repository.findAll()).hasSize(0);
+    }
 
 }

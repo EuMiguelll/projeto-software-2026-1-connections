@@ -72,8 +72,24 @@ class ConnectionServiceTest {
 
 
 
-    // createShouldThrowNotFoundWhenToUserDoesNotExist
-    // listByUserShouldReturnConnectionsAndSendEvent
+    @Test
+    void create_shouldThrowNotFoundWhenToUserDoesNotExist() {
+        String fromUserId = "user1";
+        String toUserId = "user2";
+
+        when(userClient.userExists(fromUserId)).thenReturn(true);
+        when(userClient.userExists(toUserId)).thenReturn(false);
+
+        assertThrows(
+                ResponseStatusException.class,
+                () -> connectionService.create(fromUserId, toUserId)
+        );
+
+        verify(userClient).userExists(fromUserId);
+        verify(userClient).userExists(toUserId);
+        verify(repository, never()).save(any(Connection.class));
+    }
+
     @Test
     void list_shouldReturnConnectionsAndSendEvent() {
 
@@ -95,6 +111,15 @@ class ConnectionServiceTest {
         assertEquals("user-1", response.getFirst().getFromUserId());
 
     }
-    // deleteShouldSendEventAndRemoveConnection
+    @Test
+    void delete_shouldSendEventAndRemoveConnection() {
+        String fromUserId = "user1";
+        String toUserId = "user2";
+
+        connectionService.delete(fromUserId, toUserId);
+
+        verify(eventProducer).send(any(Event.class));
+        verify(repository).deleteByFromUserIdAndToUserId(fromUserId, toUserId);
+    }
 
 }
